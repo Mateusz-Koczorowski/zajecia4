@@ -11,7 +11,7 @@
     $serverName = "tcp:mkoczorowskidbwdco.database.windows.net,1433";
     $database = "zajecia4";
     $username = "mkoczorowski";
-    $password = "{your_password_here}";
+    $password = "serwer2023!";
 
     $connectionOptions = array(
         "UID" => $username,
