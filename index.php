@@ -1,34 +1,36 @@
 <?php
-$host = "zajecia4mateuszkoczorowski-server.postgres.database.azure.com";
-$port = 5432;
-$dbname = "postgres";
-$user = "lascudaule";
-$password = "serwer2023!";
-
-// Połączenie z bazą danych PostgreSQL
-$connection = pg_connect("host=$host port=$port dbname=$dbname user=$user password=$password");
-
-if (!$connection) {
-    die("Błąd połączenia z bazą danych PostgreSQL: " . pg_last_error());
+// PHP Data Objects(PDO) Sample Code:
+try {
+    $conn = new PDO("sqlsrv:server = tcp:mkoczorowskizajecia4.database.windows.net,1433; Database = zajecia4mateuszkoczorowski", "mkoczorowski", "{your_password_here}");
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    print("Error connecting to SQL Server.");
+    die(print_r($e));
 }
+
+// SQL Server Extension Sample Code:
+$connectionInfo = array("UID" => "mkoczorowski", "pwd" => "serwer#SQL2023", "Database" => "zajecia4mateuszkoczorowski", "LoginTimeout" => 30, "Encrypt" => 1, "TrustServerCertificate" => 0);
+$serverName = "tcp:mkoczorowskizajecia4.database.windows.net,1433";
+$conn = sqlsrv_connect($serverName, $connectionInfo);
 
 // Wyświetlenie listy studentów
 $sql = "SELECT * FROM Students";
-$query = pg_query($connection, $sql);
+$query = sqlsrv_query($conn, $sql);
 
 if ($query === false) {
-    die("Błąd zapytania: " . pg_last_error($connection));
+    die(print_r(sqlsrv_errors(), true));
 }
 
 echo "<h2>Lista Studentów:</h2>";
 echo "<ul>";
-while ($row = pg_fetch_assoc($query)) {
+while ($row = sqlsrv_fetch_array($query, SQLSRV_FETCH_ASSOC)) {
     echo "<li>{$row['first_name']} {$row['last_name']} (Semestr: {$row['semester']}, Stypendium: {$row['scholarship']})</li>";
 }
 echo "</ul>";
+sqlsrv_free_stmt($query);
 
-// Zamknięcie połączenia z bazą danych PostgreSQL
-pg_close($connection);
+// Zamknięcie połączenia z bazą danych
+sqlsrv_close($conn);
 ?>
 
 <h2>Dodaj Studenta:</h2>
@@ -52,24 +54,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $scholarship = $_POST['scholarship'];
     $semester = $_POST['semester'];
 
-    // Połączenie z bazą danych PostgreSQL
-    $connection = pg_connect("host=$host port=$port dbname=$dbname user=$user password=$password");
+    // Połączenie z bazą danych
+    $conn = sqlsrv_connect($serverName, $connectionInfo);
 
-    if (!$connection) {
-        die("Błąd połączenia z bazą danych PostgreSQL: " . pg_last_error());
+    if ($conn === false) {
+        die(print_r(sqlsrv_errors(), true));
     }
 
     // Dodanie nowego studenta
-    $sql = "INSERT INTO Students (first_name, last_name, scholarship, semester) VALUES ('$first_name', '$last_name', '$scholarship', $semester)";
-    $result = pg_query($connection, $sql);
+    $sql = "INSERT INTO Students (first_name, last_name, scholarship, semester) VALUES (?, ?, ?, ?)";
+    $params = array($first_name, $last_name, $scholarship, $semester);
+    $query = sqlsrv_query($conn, $sql, $params);
 
-    if ($result) {
-        echo "<p>Nowy student został dodany.</p>";
-    } else {
-        die("Błąd podczas dodawania studenta: " . pg_last_error($connection));
+    if ($query === false) {
+        die(print_r(sqlsrv_errors(), true));
     }
 
-    // Zamknięcie połączenia z bazą danych PostgreSQL
-    pg_close($connection);
+    echo "<p>Nowy student został dodany.</p>";
+
+    // Zamknięcie połączenia z bazą danych
+    sqlsrv_close($conn);
 }
 ?>
